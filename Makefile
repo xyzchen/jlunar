@@ -27,4 +27,6 @@ install:
 
 clean:
 	rm -f *.o
+	rm -f lunar
+	
 

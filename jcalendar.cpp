@@ -370,7 +370,7 @@ void JCalendar::Draw(cairo_t* cr)
 	// 绘制文本
 	//------------------------------------------------------
 	// 设置字体名称
-	//cairo_select_font_face(cr, "Arial", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_select_font_face(cr, "WenQuanYi Micro Hei", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 	// 设置字体大小
 	cairo_set_font_size(cr, m_iLargeFontSize);
 	cairo_set_source_rgb(cr, m_rgbNormal.red()/255.0, m_rgbNormal.green()/255.0, m_rgbNormal.blue()/255.0);
