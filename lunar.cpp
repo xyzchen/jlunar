@@ -15,21 +15,28 @@
 #define MAIN_W  450
 #define MAIN_H  400
 
-//--------------------------------------------------------
+//---------------------------------------------------------------------
 // 全局变量
 JCalendar* g_calendar = NULL; //日历对象
-gboolean g_drag = FALSE;		//是否在拖动状态
+gboolean    g_drag = FALSE;		//是否在拖动状态
 int g_x = 0;
 int g_y = 0;
 GtkWidget* popmenu = NULL;	//弹出式菜单
-//--------------------------------------------------------
+//主窗口
+GtkWidget* window    = NULL;
+//---------------------------------------------------------------------
 
+//---------------------------------------------------------------------
 //关闭窗口事件
+//---------------------------------------------------------------------
 static void destroy(GtkWidget *widget, gpointer data)
 {
     gtk_main_quit();
 }
 
+//---------------------------------------------------------------------
+// 鼠标事件
+//---------------------------------------------------------------------
 // 鼠标按下时的事件，只在左键按下时拖动窗体
 static gint button_press_event(GtkWidget* widget, GdkEventButton* event, gpointer data)
 {	//按键：1：左键；2：中键；3：右键
@@ -73,7 +80,9 @@ static gint motion_notify_event(GtkWidget* widget, GdkEventButton* event, gpoint
 	return TRUE;
 }
 
+//---------------------------------------------------------------------
 // 绘图事件
+//---------------------------------------------------------------------
 static gint expose_event(GtkWidget* widget, GdkEventExpose* event)
 {
 	int area_w  = 100;
@@ -121,11 +130,50 @@ static gint expose_event(GtkWidget* widget, GdkEventExpose* event)
            
 	return TRUE;
 }
+
+//---------------------------------------------------------------------
+// 菜单项事件
+//---------------------------------------------------------------------
+//下一个月
+static void menu_nextmonth(GtkWidget *widget,  gpointer data)
+{
+	g_calendar->SelectNextMonth();
+	gtk_widget_queue_draw(window);
+}
+
+//上一个月
+static void menu_prevmonth(GtkWidget *widget,  gpointer data)
+{
+	g_calendar->SelectPrevMonth();
+	gtk_widget_queue_draw(window);
+}
+
+//下一年
+static void menu_nextyear(GtkWidget *widget,  gpointer data)
+{
+	g_calendar->SelectNextYear();
+	gtk_widget_queue_draw(window);
+}
+
+//上一年
+static void menu_prevyear(GtkWidget *widget,  gpointer data)
+{
+	g_calendar->SelectPrevYear();
+	gtk_widget_queue_draw(window);
+}
+
+//重置
+static void menu_reset(GtkWidget *widget,  gpointer data)
+{
+	g_calendar->Reset();
+	gtk_widget_queue_draw(window);
+}
+
+//---------------------------------------------------------------------
 // 主函数
+//---------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-	//主窗口
-	GtkWidget* window;
 	//绘图区域
 	GtkWidget* draw_area;
 	//初始化
@@ -146,14 +194,37 @@ int main(int argc, char** argv)
 	//===============================================
 	//创建弹出式菜单
 	popmenu = gtk_menu_new(); /* 创建菜单 */
-	//创建菜单项： 打开菜单项
-	GtkWidget* open_item = gtk_menu_item_new_with_label("Open");	//菜单项	
-	gtk_menu_append(GTK_MENU(popmenu), open_item);	//添加到菜单中
-	//退出菜单项
-	GtkWidget* quit_item = gtk_menu_item_new_with_label("Quit");
+	//创建菜单项： 
+	//下一个月
+	GtkWidget* nextmonth_item = gtk_menu_item_new_with_label("下一月");	//菜单项	
+	gtk_menu_append(GTK_MENU(popmenu), nextmonth_item);	//添加到菜单中
+	g_signal_connect_swapped(G_OBJECT(nextmonth_item), "activate", G_CALLBACK(menu_nextmonth), (gpointer)g_strdup("NextMonth"));	//绑定事件
+	
+	//上一个月
+	GtkWidget* prevmonth_item = gtk_menu_item_new_with_label("上一月");	//菜单项	
+	gtk_menu_append(GTK_MENU(popmenu), prevmonth_item);	//添加到菜单中
+	g_signal_connect_swapped(G_OBJECT(prevmonth_item), "activate", G_CALLBACK(menu_prevmonth), (gpointer)g_strdup("PrevMonth"));	//绑定事件
+	
+	//下一年
+	GtkWidget* nextyear_item = gtk_menu_item_new_with_label("下一年");	//菜单项	
+	gtk_menu_append(GTK_MENU(popmenu), nextyear_item);	//添加到菜单中
+	g_signal_connect_swapped(G_OBJECT(nextyear_item), "activate", G_CALLBACK(menu_nextyear), (gpointer)g_strdup("NextYear"));	//绑定事件
+	
+	//上一年
+	GtkWidget* prevyear_item = gtk_menu_item_new_with_label("上一年");	//菜单项	
+	gtk_menu_append(GTK_MENU(popmenu), prevyear_item);	//添加到菜单中
+	g_signal_connect_swapped(G_OBJECT(prevyear_item), "activate", G_CALLBACK(menu_prevyear), (gpointer)g_strdup("PrevYear"));	//绑定事件
+	
+	//刷新
+	GtkWidget* reset_item = gtk_menu_item_new_with_label("重置");	//菜单项	
+	gtk_menu_append(GTK_MENU(popmenu), reset_item);	//添加到菜单中
+	g_signal_connect_swapped(G_OBJECT(reset_item), "activate", G_CALLBACK(menu_reset), (gpointer)g_strdup("Reset"));	//绑定事件
+	
+	//退出
+	GtkWidget* quit_item = gtk_menu_item_new_with_label("退出");
 	gtk_menu_append(GTK_MENU(popmenu), quit_item);
-	//我们可以绑定Quit菜单项到我们的退出函数
-	g_signal_connect_swapped(G_OBJECT(quit_item), "activate", G_CALLBACK(destroy), (gpointer)g_strdup("Quit"));	//绑定事件			
+	g_signal_connect_swapped(G_OBJECT(quit_item), "activate", G_CALLBACK(destroy), (gpointer)g_strdup("Quit"));	//绑定事件
+				
 	// 一定要显示菜单项
 	gtk_widget_show_all(GTK_WIDGET(popmenu));
 	//===============================================
