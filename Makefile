@@ -24,7 +24,7 @@ objs   = \
 
 #目标文件与 .o文件的依赖关系
 $(proj):$(objs)
-	$(cc) -o $(proj) $(cflags) $(objs)
+	$(cc) -o $(outdir)/$(proj) $(cflags) $(objs)
 
 #.o文件与原文件的依赖关系
 $(outdir)/jlunar.o: jlunar.cpp jlunar.h
