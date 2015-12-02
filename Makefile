@@ -21,7 +21,7 @@ objs   = \
 	$(outdir)/jlunarJQ.o \
 	$(outdir)/jcalendar.o \
 	$(outdir)/lunar.o
-
+	
 #目标文件与 .o文件的依赖关系
 $(proj):$(objs)
 	$(cc) -o $(outdir)/$(proj) $(cflags) $(objs)
@@ -39,13 +39,9 @@ $(outdir)/jcalendar.o: jcalendar.cpp jlunar.h
 $(outdir)/lunar.o: lunar.cpp jlunar.h
 	$(cc) $(cflags) -c -o $(outdir)/lunar.o lunar.cpp
 
-
 install:                     #安装
 	cp $(proj) /usr/local/bin/lunar
 
-
-clean:                           #clean为目标
+clean:                      #clean为目标
 	rm -f $(objs) $(proj)
-
-
 

@@ -3,32 +3,81 @@
 //     作者: 逸少 
 //    jmchxy@163.com
 //      2003-6
-//   修改: 2010-3
+//   修改: 2010-3,2015-6
 //--------------------------------------------------------
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits>
+#include <glib.h>
 #include <gdk/gdkcursor.h>
 #include <gdk/gdk.h>
 #include <cairo.h>
 #include <gtk/gtk.h>
 #include "jcalendar.h"
+#ifndef MAX_PATH
+	#define MAX_PATH 512
+#endif
 
 // 常量
-const int MAIN_W = 450;
-const int MAIN_H = 400;
+const int MAIN_W = 320;
+const int MAIN_H = 280;
 
 //---------------------------------------------------------------------
 // 全局变量
 //---------------------------------------------------------------------
 // 鼠标状态
 gboolean   g_drag = FALSE;		//是否在拖动状态
-int g_x = 0;
-int g_y = 0;
+int g_x = 0;	//鼠标相对于窗口的位置
+int g_y = 0;	//鼠标相对于窗口的位置
 
 // GUI 构件
 GtkWidget* g_mainwin  = NULL;	//主窗口
 GtkWidget* g_popmenu  = NULL;	//弹出式菜单
 JCalendar* g_calendar = NULL; 	//日历对象
 //---------------------------------------------------------------------
+int g_posX = 0;		//窗口位置X
+int g_posY = 0;		//窗口位置Y
+//读取配置文件
+static void load_config()
+{
+	//配置文件文件名
+	char  config[MAX_PATH+1];
+    strcpy(config, getenv("HOME"));
+    strcat(config, "/.config/lunar.ini");
+    //计算位置默认位置
+	g_posX = gdk_screen_width() - MAIN_W - 4;
+	g_posY = gdk_screen_height() - MAIN_H - 40;
+    //读取配置文件
+	GError* error = NULL;
+	GKeyFileFlags flags = (GKeyFileFlags)(G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS);
+	GKeyFile* keyfile = g_key_file_new ();
+	if(!g_key_file_load_from_file(keyfile, config, flags, &error))
+	{
+		fprintf(stderr, "%s\n", error->message);
+		return;
+	}
+	g_posX = g_key_file_get_integer(keyfile, "position", "x", NULL);
+	g_posY = g_key_file_get_integer(keyfile, "position", "y", NULL);
+	g_key_file_free(keyfile);
+}
+
+//保存配置文件
+static void save_config()
+{
+	//配置文件文件名
+	char  config[MAX_PATH+1];
+    strcpy(config, getenv("HOME"));
+    strcat(config, "/.config/lunar.ini");
+    //保存位置到配置文件中
+    GError* error = NULL;
+	GKeyFileFlags flags = (GKeyFileFlags)(G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS);
+	GKeyFile* keyfile = g_key_file_new ();
+	g_key_file_set_integer(keyfile, "position", "x", g_posX);
+	g_key_file_set_integer(keyfile, "position", "y", g_posY);
+	g_key_file_save_to_file(keyfile, config, &error);
+	g_key_file_free(keyfile);
+}
 
 //---------------------------------------------------------------------
 //关闭窗口事件
@@ -79,7 +128,9 @@ static gint motion_notify_event(GtkWidget* widget, GdkEventButton* event, gpoint
 		int x, y;
 		GtkWidget* window = (GtkWidget *)data;
 		gtk_window_get_position((GtkWindow *)window, &x, &y);	//取窗体绝对坐标
-		gtk_window_move((GtkWindow*)window, x + event->x - g_x, y + event->y - g_y);	//移动窗体
+		g_posX = x + event->x - g_x;
+		g_posY = y + event->y - g_y;
+		gtk_window_move((GtkWindow*)window, g_posX, g_posY);	//移动窗体
 	}
 	return TRUE;
 }
@@ -145,6 +196,8 @@ static void menu_reset(GtkWidget *widget,  gpointer data)
 {
 	g_calendar->Reset();
 	gtk_widget_queue_draw(g_mainwin);
+	//保存配置
+	save_config();
 }
 
 //创建弹出式菜单
@@ -194,7 +247,8 @@ int main(int argc, char** argv)
 {
 	//初始化
 	gtk_init(&argc, &argv);
-	
+	//装载配置文件
+	load_config();
 	//创建主窗口
 	g_mainwin = gtk_window_new(GTK_WINDOW_TOPLEVEL);	//创建主窗口	或 GTK_WINDOW_POPUP（POPUP窗口，没有边框，置顶）
 	gtk_window_set_skip_taskbar_hint(GTK_WINDOW(g_mainwin), TRUE);	//不在任务栏显示窗口列表
@@ -202,10 +256,7 @@ int main(int argc, char** argv)
 	gtk_window_set_decorated(GTK_WINDOW(g_mainwin), FALSE);	//去掉边框
 	//设置窗口大小、位置、背景
 	gtk_widget_set_size_request(g_mainwin, MAIN_W, MAIN_H);	//设置大小
-	gint width  = gdk_screen_width();	//计算位置
-	gint height = gdk_screen_height();
-	//gtk_widget_set_app_paintable(g_mainwin, TRUE);
-	gtk_window_move(GTK_WINDOW(g_mainwin), width-MAIN_W, height-MAIN_H-60);
+	gtk_window_move(GTK_WINDOW(g_mainwin), g_posX, g_posY);	//移动窗体
 	//gtk_window_set_opacity(GTK_WINDOW(g_mainwin), 0.5);	//设置透明度
 	
 	//创建弹出菜单
@@ -266,6 +317,9 @@ int main(int argc, char** argv)
 	
 	//进入消息循环
 	gtk_main();
+	
+	//退出前保存配置文件
+	save_config();
 	
 	return 0;
 }

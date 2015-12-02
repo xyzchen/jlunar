@@ -52,7 +52,7 @@ JCalendar::JCalendar(void)
 	m_iGridWidth  = 0;
 	m_iGridHeight = 0;
 	// 绘图对象
-	m_iLargeFontSize = 32;	//大字体的点数
+	m_iLargeFontSize = 24;	//大字体的点数
 	m_iSmallFontSize = m_iLargeFontSize / 2;	//小字体的点数
 	m_rgbNormal	 = RgbColor(0, 192, 0);		//正常日期的颜色
 	m_rgbHoliday = RgbColor(255, 0, 0);		//节假日的颜色
