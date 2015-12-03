@@ -196,7 +196,11 @@ static void menu_reset(GtkWidget *widget,  gpointer data)
 {
 	g_calendar->Reset();
 	gtk_widget_queue_draw(g_mainwin);
-	//保存配置
+}
+
+//保存配置
+static void menu_savecfg(GtkWidget *widget,  gpointer data)
+{
 	save_config();
 }
 
@@ -232,6 +236,11 @@ static GtkWidget* create_popmenu()
 	gtk_menu_append(GTK_MENU(popmenu), reset_item);	//添加到菜单中
 	g_signal_connect_swapped(G_OBJECT(reset_item), "activate", G_CALLBACK(menu_reset), (gpointer)g_strdup("Reset"));	//绑定事件
 	
+	//保存配置
+	GtkWidget* savecfg_item = gtk_menu_item_new_with_label("保存");	//菜单项	
+	gtk_menu_append(GTK_MENU(popmenu), savecfg_item);	//添加到菜单中
+	g_signal_connect_swapped(G_OBJECT(savecfg_item), "activate", G_CALLBACK(menu_savecfg), (gpointer)g_strdup("SaveCfg"));	//绑定事件
+
 	//退出
 	GtkWidget* quit_item = gtk_menu_item_new_with_label("退出");
 	gtk_menu_append(GTK_MENU(popmenu), quit_item);
@@ -271,7 +280,7 @@ int main(int argc, char** argv)
 	//颜色
 	GdkColor color;
 	
-	//设置前景/背景色
+	//设置窗口 前景/背景色
 	color.red  = 0;
 	color.blue = 0; 
 	color.green= 0;
@@ -282,7 +291,7 @@ int main(int argc, char** argv)
 	//创建绘图区域
 	GtkWidget* draw_area = gtk_drawing_area_new();
 	
-	//设置绘图区颜色
+	//设置绘图区 前景/背景色
 	color.green= 0;
 	gtk_widget_modify_bg(GTK_WIDGET(draw_area), GTK_STATE_NORMAL, &color);	//设置背景
 	color.green= 65535;
@@ -306,7 +315,7 @@ int main(int argc, char** argv)
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "button_press_event", GTK_SIGNAL_FUNC(button_press_event), g_mainwin);
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "motion_notify_event", GTK_SIGNAL_FUNC(motion_notify_event), g_mainwin);
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "button_release_event", GTK_SIGNAL_FUNC(button_release_event), g_mainwin);
-	gtk_signal_connect (GTK_OBJECT(g_mainwin), "destroy", GTK_SIGNAL_FUNC(destroy), NULL);
+	gtk_signal_connect(GTK_OBJECT(g_mainwin), "destroy", GTK_SIGNAL_FUNC(destroy), NULL);
 	//设置透明颜色处理
 	GdkScreen* screen = gtk_widget_get_screen(g_mainwin);	// 重要
 	GdkColormap* colormap =  gdk_screen_get_rgba_colormap(screen);
