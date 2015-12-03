@@ -40,8 +40,8 @@ $(outdir)/lunar.o: lunar.cpp jlunar.h
 	$(cc) $(cflags) -c -o $(outdir)/lunar.o lunar.cpp
 
 install:                     #安装
-	cp ./build/$(proj) /usr/local/bin/lunar
+	cp $(outdir)/$(proj) /usr/local/bin/$(proj)
 
 clean:                      #clean为目标
-	rm -f $(objs) $(proj)
+	rm -f $(objs) $(outdir)/$(proj)
 

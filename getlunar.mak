@@ -21,7 +21,7 @@ objs   = \
 
 #目标文件与 .o文件的依赖关系
 $(proj):$(objs)
-	$(cc) -o $(proj) $(objs)
+	$(cc) -o $(outdir)/$(proj) $(objs)
 
 #.o文件与原文件的依赖关系
 $(outdir)/jlunar.o:jlunar.cpp jlunar.h
@@ -33,5 +33,6 @@ $(outdir)/jlunarJQ.o:jlunarJQ.cpp jlunar.h
 $(outdir)/getlunar.o:getlunar.cpp jlunar.h
 	$(cc) $(cflags) $(cinc) -o $(outdir)/getlunar.o getlunar.cpp
 
-clean:                           #clean为目标
-	rm -f $(objs) $(proj)
+clean:     #clean为目标
+	rm -f $(objs) $(outdir)/$(proj)
+
