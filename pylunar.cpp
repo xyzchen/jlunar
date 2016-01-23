@@ -182,7 +182,7 @@ static PyMethodDef lunarMethods[] =
   {NULL, NULL}
 };
 
-extern "C" void initpylunar() 
+PyMODINIT_FUNC initpylunar()
 {
   PyObject* m;
   m = Py_InitModule("pylunar", lunarMethods);
