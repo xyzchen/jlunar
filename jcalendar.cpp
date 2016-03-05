@@ -55,7 +55,7 @@ JCalendar::JCalendar(void)
 	m_iLargeFontSize = 24;	//大字体的点数
 	m_iSmallFontSize = m_iLargeFontSize / 2;	//小字体的点数
 	m_rgbNormal	 = RgbColor(0, 192, 0);		//正常日期的颜色
-	m_rgbHoliday = RgbColor(255, 0, 0);		//节假日的颜色
+	m_rgbHoliday = RgbColor(168, 168, 168);		//节假日的颜色
 	m_rgbGrid	 = RgbColor(192, 192, 192);	//网格线的颜色
 }
 
