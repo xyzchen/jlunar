@@ -88,6 +88,27 @@ static PyObject* wrap_GetSolarDate(PyObject* self, PyObject* args)
 	return lunar_to_dict(lunardate);
 }
 
+//从指定的UNIX时间戳获取日期对象
+static PyObject* wrap_GetDate(PyObject* self, PyObject *args) 
+{
+	time_t rawtime;
+	//解析参数
+	if (! PyArg_ParseTuple(args, "l", &rawtime))
+	{
+		rawtime = time(NULL);
+	}
+	struct tm * ptm = gmtime ( &rawtime );
+
+	LUNARDATE lunardate;
+	memset(&lunardate, 0, sizeof(lunardate));
+	lunardate.wYear  = ptm->tm_year + 1900;
+	lunardate.wMonth = ptm->tm_mon  + 1;
+	lunardate.wDay   = ptm->tm_mday;
+	cjxGetLunarDate(&lunardate);
+	// 构造一个字典对象返回给调用者
+	return lunar_to_dict(lunardate);
+}
+
 //获取今天的日期数据
 static PyObject* wrap_GetToday(PyObject* self, PyObject *args) 
 {
@@ -173,17 +194,18 @@ static PyObject* wrap_DateFromOffsetdays(PyObject* self, PyObject* args)
 //--------------------------------------------------------------------------------------
 static PyMethodDef lunarMethods[] = 
 {
-  {"get_lunardate", wrap_GetLunarDate, METH_VARARGS, "get_lunardate(y, m, d): 从公历日期获取农历日期"},
-  {"get_solardate", wrap_GetSolarDate, METH_VARARGS, "get_solardate(y, m, d, isleap): 从农历日期获取公历日期"},
-  {"get_today", wrap_GetToday, METH_VARARGS, "get_today(): 获取当天的农历日期"},
-  {"get_todaystring", wrap_GetTodayString, METH_VARARGS, "get_todaystring(): 获取当天的日期字符串"},
-  {"get_offset_solardays", wrap_GetOffsetSolardays, METH_VARARGS, "get_offset_solardays(y, m, d): 公历 y-m-d 到 1900-1-1(=1)的天数 "},
-  {"get_date_from_offsetdays", wrap_DateFromOffsetdays, METH_VARARGS, "get_date_from_offsetdays(days): 计算距离1900-1-1(=1)为days天的日期"},
-  {NULL, NULL}
+	{"get_today", wrap_GetToday, METH_VARARGS, "get_today(): 获取当天的农历日期"},
+	{"get_todaystring", wrap_GetTodayString, METH_VARARGS, "get_todaystring(): 获取当天的日期字符串"},
+	{"get_date", wrap_GetDate, METH_VARARGS, "get_date(time()): 从指定的UNIX时间戳获取日期对象"},
+	{"get_lunardate", wrap_GetLunarDate, METH_VARARGS, "get_lunardate(y, m, d): 从公历日期获取农历日期"},
+	{"get_solardate", wrap_GetSolarDate, METH_VARARGS, "get_solardate(y, m, d, isleap): 从农历日期获取公历日期"},
+	{"get_offset_solardays", wrap_GetOffsetSolardays, METH_VARARGS, "get_offset_solardays(y, m, d): 公历 y-m-d 到 1900-1-1(=1)的天数 "},
+	{"get_date_from_offsetdays", wrap_DateFromOffsetdays, METH_VARARGS, "get_date_from_offsetdays(days): 计算距离1900-1-1(=1)为days天的日期"},
+	{NULL, NULL}
 };
 
 PyMODINIT_FUNC initpylunar()
 {
-  PyObject* m;
-  m = Py_InitModule("pylunar", lunarMethods);
+	PyObject* m;
+	m = Py_InitModule("pylunar", lunarMethods);
 }
