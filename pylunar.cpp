@@ -190,8 +190,10 @@ static PyObject* wrap_DateFromOffsetdays(PyObject* self, PyObject* args)
 	return lunar_to_dict(lunar_date);
 }
 
-
-//--------------------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////
+//----------------------------------------------------
+// 模块提供的方法
+//----------------------------------------------------
 static PyMethodDef lunarMethods[] = 
 {
 	{"get_today", wrap_GetToday, METH_VARARGS, "get_today(): 获取当天的农历日期"},
@@ -204,8 +206,23 @@ static PyMethodDef lunarMethods[] =
 	{NULL, NULL}
 };
 
+// 模块的文档
+static char* module_doc = "Python bindings for lunar（中国农历）\nauthor：陈逸少\nmail:jmchxy@gmail.com";
+static char* module_author = "陈逸少(jmchxy@gmail.com)";
+// 初始化模块
 PyMODINIT_FUNC initpylunar()
 {
 	PyObject* m;
-	m = Py_InitModule("pylunar", lunarMethods);
+	m = Py_InitModule3("pylunar", lunarMethods, module_doc);
+	if (m == NULL || !PyModule_Check(m))
+		return;
+	//获取模版字典，然后给模版字典增加参数
+	PyObject* d = PyModule_GetDict(m);
+	if(d == NULL)
+		return;
+	
+	//添加变量
+	PyDict_SetItemString(d, "__author__", Py_BuildValue("s", module_author));
+	//添加版本变量
+	PyDict_SetItemString(d, "version", Py_BuildValue("(ii)", 0, 1));
 }

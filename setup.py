@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
+package = 'pylunar'
+version = '0.1'
+
 from distutils.core import setup
 from distutils.extension import Extension
-
-version = '0.1'
 
 cmdclass = {}
 source_files = ['jlunar.cpp', 'jlunarJQ.cpp', 'pylunar.cpp']
