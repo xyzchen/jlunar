@@ -4,12 +4,16 @@
 package = 'pylunar'
 version = '0.1'
 
+import sys
 from distutils.core import setup
 from distutils.extension import Extension
 
 cmdclass = {}
-source_files = ['jlunar.cpp', 'jlunarJQ.cpp', 'pylunar.cpp']
-
+if sys.version_info > (3,):
+	source_files = ['jlunar.cpp', 'jlunarJQ.cpp', 'py3lunar.cpp']
+else:
+	source_files = ['jlunar.cpp', 'jlunarJQ.cpp', 'pylunar.cpp']
+#安装
 setup(
       name="pylunar",
       version="0.1",
