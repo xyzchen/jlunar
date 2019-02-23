@@ -23,6 +23,9 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 }
 #endif
 
+//设置错误信息
+static PyObject* error_out(PyObject *m, const char* errmsg);
+
 //把LUNARDATE对象转换到python 字典对象
 static PyObject* lunar_to_dict(const LUNARDATE& lunardate)
 {
@@ -70,10 +73,10 @@ static PyObject* wrap_GetLunarDate(PyObject* self, PyObject* args)
 //  参数：农历年月日，是否闰月
 static PyObject* wrap_GetSolarDate(PyObject* self, PyObject* args)
 {
-	int y, m, d, leap;
-	if (! PyArg_ParseTuple(args, "iiii", &y, &m , &d, &leap))
+	int y, m, d, leap=0;
+	if (! PyArg_ParseTuple(args, "iii|i", &y, &m , &d, &leap))
 	{
-		PyErr_SetString(PyExc_TypeError, "无效的参数");
+		PyErr_SetString(PyExc_TypeError, "无效的参数，参数为(year, month, day, leap)");
 		return NULL;
 	}
 	LUNARDATE lunardate;
@@ -91,11 +94,12 @@ static PyObject* wrap_GetSolarDate(PyObject* self, PyObject* args)
 //从指定的UNIX时间戳获取日期对象
 static PyObject* wrap_GetDate(PyObject* self, PyObject *args)
 {
-	time_t rawtime;
+	time_t rawtime = time(NULL);
 	//解析参数
-	if (! PyArg_ParseTuple(args, "l", &rawtime))
+	if (! PyArg_ParseTuple(args, "|l", &rawtime))
 	{
-		rawtime = time(NULL);
+		PyErr_SetString(PyExc_TypeError, "无效的参数, 接收一个参数为unix时间戳(int)");
+		rawtime = NULL;
 	}
 	struct tm * ptm = gmtime ( &rawtime );
 
@@ -198,7 +202,7 @@ static PyMethodDef lunarMethods[] =
 {
 	{"get_today", wrap_GetToday, METH_VARARGS, "get_today(): 获取当天的农历日期"},
 	{"get_todaystring", wrap_GetTodayString, METH_VARARGS, "get_todaystring(): 获取当天的日期字符串"},
-	{"get_date", wrap_GetDate, METH_VARARGS, "get_date(time()): 从指定的UNIX时间戳获取日期对象"},
+	{"get_date", wrap_GetDate, METH_VARARGS, "get_date(time():int): 从指定的UNIX时间戳获取日期对象"},
 	{"get_lunardate", wrap_GetLunarDate, METH_VARARGS, "get_lunardate(y, m, d): 从公历日期获取农历日期"},
 	{"get_solardate", wrap_GetSolarDate, METH_VARARGS, "get_solardate(y, m, d, isleap): 从农历日期获取公历日期"},
 	{"get_offset_solardays", wrap_GetOffsetSolardays, METH_VARARGS, "get_offset_solardays(y, m, d): 公历 y-m-d 到 1900-1-1(=1)的天数 "},
@@ -223,16 +227,18 @@ static int pylunar_traverse(PyObject* m, visitproc visit, void *arg)
 	return 0;
 }
 
+//清除错误信息
 static int pylunar_clear(PyObject *m)
 {
 	Py_CLEAR(GETSTATE(m)->error);
 	return 0;
 }
 
-static PyObject* error_out(PyObject *m)
+//设置错误信息
+static PyObject* error_out(PyObject *m, const char* errmsg)
 {
 	module_state* st = GETSTATE(m);
-	PyErr_SetString(st->error, "初始化失败");
+	PyErr_SetString(st->error, errmsg);
 	return NULL;
 }
 
