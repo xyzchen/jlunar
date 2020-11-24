@@ -84,7 +84,9 @@ static void save_config()
 //---------------------------------------------------------------------
 static void destroy(GtkWidget *widget, gpointer data)
 {
-    gtk_main_quit();
+	//退出前保存配置文件
+	save_config();
+	gtk_main_quit();
 }
 
 //---------------------------------------------------------------------
@@ -146,7 +148,7 @@ static gint expose_event(GtkWidget* widget, GdkEventExpose* event)
 	
 	//cairo绘图
 	cairo_t* cr = gdk_cairo_create(widget->window);
-	cairo_set_source_rgba(cr, 0, 0, 0, 0);	//设置透明度为完全透明
+	cairo_set_source_rgba(cr, 0, 0, 0, 0.1);	//设置透明度为接近完全透明
 	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);	// 重要
 	cairo_paint(cr);
 	//cairo_save (cr);
@@ -316,6 +318,8 @@ int main(int argc, char** argv)
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "motion_notify_event", GTK_SIGNAL_FUNC(motion_notify_event), g_mainwin);
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "button_release_event", GTK_SIGNAL_FUNC(button_release_event), g_mainwin);
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "destroy", GTK_SIGNAL_FUNC(destroy), NULL);
+	gtk_signal_connect(GTK_OBJECT(g_mainwin), "delete-event", GTK_SIGNAL_FUNC(destroy), NULL);
+
 	//设置透明颜色处理
 	GdkScreen* screen = gtk_widget_get_screen(g_mainwin);	// 重要
 	GdkColormap* colormap =  gdk_screen_get_rgba_colormap(screen);
@@ -326,10 +330,7 @@ int main(int argc, char** argv)
 	
 	//进入消息循环
 	gtk_main();
-	
-	//退出前保存配置文件
-	save_config();
-	
+
 	return 0;
 }
 
