@@ -206,6 +206,21 @@ static void menu_savecfg(GtkWidget *widget,  gpointer data)
 	save_config();
 }
 
+//关于
+static void menu_about(GtkWidget *widget,  gpointer data)
+{
+	const gchar* authors[] = {"陈逸少", NULL};
+	GtkAboutDialog* about = (GtkAboutDialog*)gtk_about_dialog_new ();
+	gtk_about_dialog_set_name(about, "关于本程序");
+	gtk_about_dialog_set_program_name(about, "农历桌面日历");
+	gtk_about_dialog_set_comments(about, "农历桌面透明背景农历日历");
+	gtk_about_dialog_set_version(about, "1.0.0");
+	gtk_about_dialog_set_copyright(about, "(c)陈逸少");
+	gtk_about_dialog_set_authors(about, (const gchar**)authors);
+	gtk_about_dialog_set_website(about, "https://github.com/xyzchen/jlunar");
+	gtk_dialog_run (GTK_DIALOG(about));
+}
+
 //创建弹出式菜单
 static GtkWidget* create_popmenu()
 {
@@ -242,6 +257,14 @@ static GtkWidget* create_popmenu()
 	GtkWidget* savecfg_item = gtk_menu_item_new_with_label("保存");	//菜单项	
 	gtk_menu_append(GTK_MENU(popmenu), savecfg_item);	//添加到菜单中
 	g_signal_connect_swapped(G_OBJECT(savecfg_item), "activate", G_CALLBACK(menu_savecfg), (gpointer)g_strdup("SaveCfg"));	//绑定事件
+
+	//关于
+	GtkWidget* about_item = gtk_menu_item_new_with_label("关于");	//菜单项
+	gtk_menu_append(GTK_MENU(popmenu), about_item);	//添加到菜单中
+	g_signal_connect_swapped(G_OBJECT(about_item), "activate", G_CALLBACK(menu_about), (gpointer)g_strdup("About"));	//绑定事件
+
+	GtkWidget* line_item = gtk_menu_item_new();	//分割线
+	gtk_menu_append(GTK_MENU(popmenu), line_item);	//添加到菜单中
 
 	//退出
 	GtkWidget* quit_item = gtk_menu_item_new_with_label("退出");
@@ -318,7 +341,6 @@ int main(int argc, char** argv)
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "motion_notify_event", GTK_SIGNAL_FUNC(motion_notify_event), g_mainwin);
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "button_release_event", GTK_SIGNAL_FUNC(button_release_event), g_mainwin);
 	gtk_signal_connect(GTK_OBJECT(g_mainwin), "destroy", GTK_SIGNAL_FUNC(destroy), NULL);
-	gtk_signal_connect(GTK_OBJECT(g_mainwin), "delete-event", GTK_SIGNAL_FUNC(destroy), NULL);
 
 	//设置透明颜色处理
 	GdkScreen* screen = gtk_widget_get_screen(g_mainwin);	// 重要
@@ -333,4 +355,3 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-

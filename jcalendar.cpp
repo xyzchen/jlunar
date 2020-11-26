@@ -370,12 +370,15 @@ void JCalendar::Draw(cairo_t* cr)
 	// 绘制文本
 	//------------------------------------------------------
 	// 设置字体名称
-#if __linux__
+#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+	//MacOS
+	cairo_select_font_face(cr, "PingFangSC-Regular", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+#elif __linux__
 	//Linux
 	cairo_select_font_face(cr, "WenQuanYi Micro Hei", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 #else
-	//MacOS
-	cairo_select_font_face(cr, "PingFangSC-Regular", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+	//Windows
+	cairo_select_font_face(cr, "msya", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 #endif
 	// 设置字体大小
 	cairo_set_font_size(cr, m_iLargeFontSize);
