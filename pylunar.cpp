@@ -207,7 +207,7 @@ static PyMethodDef lunarMethods[] =
 };
 
 // 模块的文档
-static char* module_doc = "Python bindings for lunar（中国农历）\nauthor：陈逸少\nmail:jmchxy@gmail.com";
+static char* module_doc = "Python bindings for lunar（中国农历）";
 static char* module_author = "陈逸少(jmchxy@gmail.com)";
 // 初始化模块
 PyMODINIT_FUNC initpylunar()
@@ -225,4 +225,5 @@ PyMODINIT_FUNC initpylunar()
 	PyDict_SetItemString(d, "__author__", Py_BuildValue("s", module_author));
 	//添加版本变量
 	PyDict_SetItemString(d, "version", Py_BuildValue("(ii)", 0, 1));
+	PyDict_SetItemString(d, "__version__", Py_BuildValue("s", "0.1"));
 }
