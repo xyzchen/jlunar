@@ -357,9 +357,9 @@ void JCalendar::Draw(cairo_t* cr)
 		col = m_lunarNow.wWeekDay;
 
 		selleft = m_rectGrid.left + col * m_iGridWidth + 1;
-		seltop  = m_rectGrid.top  + row * m_iGridHeight + 1;
-		selwidth = m_iGridWidth - 3;
-		selheight= m_iGridHeight - 3;
+		seltop  = m_rectGrid.top  + row * m_iGridHeight - 1;
+		selwidth = m_iGridWidth - 2;
+		selheight= m_iGridHeight - 2;
 
 		// 在选择的日期的格子绘制一个矩形背景
 		cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.5);
