@@ -6,6 +6,7 @@ cc     = g++
 
 #编译参数: -fpic：生成共享库
 cflags = `pkg-config --cflags --libs gtk+-3.0`
+#cflags = `pkg-config --cflags --libs gtk-mac-integration-gtk3`
 
 #编译文件夹（存放.o文件）
 outdir = ./build

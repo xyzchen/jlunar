@@ -43,12 +43,12 @@ static void load_config()
 {
 	//配置文件文件名
 	char  config[MAX_PATH+1];
-    strcpy(config, getenv("HOME"));
-    strcat(config, "/.config/lunar.ini");
-    //计算位置默认位置
+	strcpy(config, getenv("HOME"));
+	strcat(config, "/.config/lunar.ini");
+	//计算位置默认位置
 	g_posX = gdk_screen_width() - MAIN_W - 4;
 	g_posY = gdk_screen_height() - MAIN_H - 40;
-    //读取配置文件
+	//读取配置文件
 	GError* error = NULL;
 	GKeyFileFlags flags = (GKeyFileFlags)(G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS);
 	GKeyFile* keyfile = g_key_file_new ();
@@ -67,10 +67,10 @@ static void save_config()
 {
 	//配置文件文件名
 	char  config[MAX_PATH+1];
-    strcpy(config, getenv("HOME"));
-    strcat(config, "/.config/lunar.ini");
-    //保存位置到配置文件中
-    GError* error = NULL;
+	strcpy(config, getenv("HOME"));
+	strcat(config, "/.config/lunar.ini");
+	//保存位置到配置文件中
+	GError* error = NULL;
 	GKeyFileFlags flags = (GKeyFileFlags)(G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS);
 	GKeyFile* keyfile = g_key_file_new ();
 	g_key_file_set_integer(keyfile, "position", "x", g_posX);
@@ -158,7 +158,7 @@ static gint expose_event(GtkWidget* widget, GdkEventExpose* event)
 	
 	//cairo_restore (cr);
 	cairo_destroy(cr);
-           
+	
 	return TRUE;
 }
 
@@ -210,7 +210,7 @@ static void menu_savecfg(GtkWidget *widget,  gpointer data)
 static void menu_about(GtkWidget *widget,  gpointer data)
 {
 	const gchar* authors[] = {"陈逸少", NULL};
-	GtkAboutDialog* about = (GtkAboutDialog*)gtk_about_dialog_new ();
+	GtkAboutDialog* about = (GtkAboutDialog*)gtk_about_dialog_new();
 	gtk_about_dialog_set_name(about, "关于本程序");
 	gtk_about_dialog_set_program_name(about, "农历桌面日历");
 	gtk_about_dialog_set_comments(about, "农历桌面透明背景农历日历");
@@ -218,7 +218,9 @@ static void menu_about(GtkWidget *widget,  gpointer data)
 	gtk_about_dialog_set_copyright(about, "(c)陈逸少");
 	gtk_about_dialog_set_authors(about, (const gchar**)authors);
 	gtk_about_dialog_set_website(about, "https://github.com/xyzchen/jlunar");
-	gtk_dialog_run (GTK_DIALOG(about));
+	gtk_window_set_position(GTK_WINDOW(about), GTK_WIN_POS_CENTER_ALWAYS);
+	gtk_dialog_run(GTK_DIALOG(about));
+	gtk_widget_destroy(GTK_WIDGET(about));
 }
 
 //创建弹出式菜单
@@ -345,6 +347,10 @@ int main(int argc, char** argv)
 	//设置透明颜色处理
 	GdkScreen* screen = gtk_widget_get_screen(g_mainwin);	// 重要
 	GdkColormap* colormap =  gdk_screen_get_rgba_colormap(screen);
+	if (colormap == NULL)
+	{
+		colormap = gdk_screen_get_default_colormap (screen);
+	}
 	gtk_widget_set_colormap(g_mainwin, colormap);
 	
 	//显示窗口

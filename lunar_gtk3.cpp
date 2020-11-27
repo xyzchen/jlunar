@@ -13,6 +13,7 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
 #include "jcalendar.h"
+
 #ifndef MAX_PATH
 	#define MAX_PATH 512
 #endif
@@ -37,6 +38,7 @@ JCalendar* g_calendar = NULL; 	//日历对象
 int g_posX = 0;		//窗口位置X
 int g_posY = 0;		//窗口位置Y
 //---------------------------------------------------------------------
+
 //读取配置文件
 static void load_config()
 {
@@ -100,7 +102,6 @@ static gint button_press_event(GtkWidget* widget, GdkEventButton* event, gpointe
 		g_drag = TRUE;		// 进入拖动状态
 		g_x    = event->x;	//取得鼠标相对于窗口的位置
 		g_y    = event->y;
-		fprintf(stderr, "Mouse Pressed at (%d, %d)...\n", g_x, g_y);
 	}
 	else if(event->button == 3)	//右键
 	{ 
@@ -131,13 +132,12 @@ static gint motion_notify_event(GtkWidget* widget, GdkEventMotion* event, gpoint
 		//这里的实现有问题，gtk3 在 Wayland 下 工作不正常。
 		int x, y;
 		GtkWidget* window = (GtkWidget *)data;
-		gtk_window_get_position((GtkWindow *)window, &x, &y);	//取窗体绝对坐标
+		gtk_window_get_position((GtkWindow *)g_mainwin, &x, &y);	//取窗体绝对坐标
 //		fprintf(stderr, "Window old pisiton at (%d, %d)\n", x, y);
 		g_posX = x + event->x - g_x;
 		g_posY = y + event->y - g_y;
-		gtk_window_move((GtkWindow*)window, g_posX, g_posY);	//移动窗体
+		gtk_window_move((GtkWindow*)g_mainwin, g_posX, g_posY);	//移动窗体
 //		fprintf(stderr, "Window new pisiton at (%d, %d)\n", g_posX, g_posY);
-
 	}
 	return TRUE;
 }
@@ -221,7 +221,9 @@ static void menu_about(GtkWidget *widget,  gpointer data)
 	gtk_about_dialog_set_copyright(about, "(c)陈逸少");
 	gtk_about_dialog_set_authors(about, (const gchar**)authors);
 	gtk_about_dialog_set_website(about, "https://github.com/xyzchen/jlunar");
+	gtk_window_set_position(GTK_WINDOW(about), GTK_WIN_POS_CENTER_ALWAYS);
 	gtk_dialog_run (GTK_DIALOG(about));
+	gtk_widget_destroy(GTK_WIDGET(about));
 }
 
 //创建弹出式菜单
@@ -293,32 +295,16 @@ static void on_app_activate(GApplication *app, gpointer data)
 	//设置窗口大小、位置、背景
 	gtk_widget_set_size_request(g_mainwin, MAIN_W, MAIN_H);	//设置大小
 	gtk_window_move(GTK_WINDOW(g_mainwin), g_posX, g_posY);	//移动窗体
-	fprintf(stderr, "Set Window Position to (%d, %d)...\n", g_posX, g_posY);
-	//gtk_window_set_opacity(GTK_WINDOW(g_mainwin), 0.5);	//设置透明度
+	gtk_window_set_opacity(GTK_WINDOW(g_mainwin), 1.0);	//设置透明度
 	//创建弹出菜单
 	g_popmenu = create_popmenu();
 	gtk_widget_show_all(GTK_WIDGET(g_popmenu)); // 一定要显示菜单项
-	//创建日历对象
+	//创建日历对象s
 	g_calendar = new JCalendar();
 	RECT  rect={0, 0, MAIN_W, MAIN_H};
 	g_calendar->SetRect(rect);
-	//--------------------------------------
-	//设置窗口 前景/背景色
-	//--------------------------------------
-//	GdkRGBA  color;
-//	color.red  = 0;
-//	color.blue = 0; 
-//	color.green= 0;
-//	gtk_widget_override_background_color(GTK_WIDGET(g_mainwin), GTK_STATE_FLAG_NORMAL, &color);	//设置背景
-//	color.green= 65535;
-//	gtk_widget_override_color(GTK_WIDGET(g_mainwin), GTK_STATE_FLAG_NORMAL, &color);	//设置前景颜色
 	//创建绘图区域
 	GtkWidget* draw_area = gtk_drawing_area_new();
-	//设置绘图区 前景/背景色
-//	color.green= 0;
-//	gtk_widget_override_background_color(GTK_WIDGET(draw_area), GTK_STATE_FLAG_NORMAL, &color);	//设置背景
-//	color.green= 65535;
-//	gtk_widget_override_color(GTK_WIDGET(draw_area), GTK_STATE_FLAG_NORMAL, &color);	//设置前景颜色
 	//绘图区加入到主窗口
 	gtk_container_add(GTK_CONTAINER(g_mainwin), draw_area); 
 	gtk_widget_show(draw_area);
@@ -336,6 +322,14 @@ static void on_app_activate(GApplication *app, gpointer data)
 	g_signal_connect(G_OBJECT(g_mainwin), "button_release_event", G_CALLBACK(button_release_event), g_mainwin);
 	g_signal_connect(G_OBJECT(g_mainwin), "destroy", G_CALLBACK(destroy), NULL);
 
+	//设置透明颜色处理
+	GdkScreen* screen = gtk_widget_get_screen(g_mainwin);	// 重要
+	GdkVisual* visual = gdk_screen_get_rgba_visual (screen);
+	if(visual == NULL)
+	{
+		visual = gdk_screen_get_system_visual(screen);
+	}
+	gtk_widget_set_visual(GTK_WIDGET(g_mainwin), visual);
 	//显示窗口
 	gtk_widget_show_all(g_mainwin);
 }
@@ -350,7 +344,7 @@ int main(int argc, char** argv)
 	//装载配置文件
 	load_config();
 	//创建应用程序
-	GtkApplication *app = gtk_application_new("org.gtk.lunar", G_APPLICATION_FLAGS_NONE);
+	GtkApplication* app = gtk_application_new("org.gtk.lunar", G_APPLICATION_FLAGS_NONE);
 	//连接事件
 	g_signal_connect(app, "activate", G_CALLBACK(on_app_activate), NULL);
 	//运行
@@ -359,4 +353,5 @@ int main(int argc, char** argv)
 	g_object_unref(app);
 	//返回结果
 	return status;
+
 }
