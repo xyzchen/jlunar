@@ -265,7 +265,7 @@ static GtkWidget* create_popmenu()
 	gtk_menu_append(GTK_MENU(popmenu), about_item);	//添加到菜单中
 	g_signal_connect_swapped(G_OBJECT(about_item), "activate", G_CALLBACK(menu_about), (gpointer)g_strdup("About"));	//绑定事件
 
-	GtkWidget* line_item = gtk_menu_item_new();	//分割线
+	GtkWidget* line_item = gtk_separator_menu_item_new();	//分割线
 	gtk_menu_append(GTK_MENU(popmenu), line_item);	//添加到菜单中
 
 	//退出
