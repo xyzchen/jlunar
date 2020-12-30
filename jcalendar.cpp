@@ -54,9 +54,9 @@ JCalendar::JCalendar(void)
 	// 绘图对象
 	m_iLargeFontSize = 24;	//大字体的点数
 	m_iSmallFontSize = m_iLargeFontSize / 2;	//小字体的点数
-	m_rgbNormal	 = RgbColor(0, 192, 0);		//正常日期的颜色
-	m_rgbHoliday = RgbColor(168, 168, 168);		//节假日的颜色
-	m_rgbGrid	 = RgbColor(192, 192, 192);	//网格线的颜色
+	m_rgbNormal	 = RgbColor(192, 192, 192);			//正常日期的颜色
+	m_rgbHoliday = RgbColor(255, 0, 0);		//节假日的颜色
+	m_rgbGrid	 = RgbColor(192, 192, 192);		//网格线的颜色
 }
 
 //-------------------------------------------
@@ -325,41 +325,26 @@ void JCalendar::Draw(cairo_t* cr)
 		x += m_iGridWidth;
 	}
 	//绘制文字
-	//  当前选择的 当月 1 号是星期几
+	// 当前选择的 当月 1 号是星期几
 	int weekStart = cjxGetWeekday(m_lunarSel.wYear, m_lunarSel.wMonth, 1);
 	// 需要写多少排
 	int nlines = (cjxGetSolarMonthDays(m_lunarSel.wYear, m_lunarSel.wMonth) + weekStart) / 7;
 	// 最后一行的个数
 	int weekEnd = (cjxGetSolarMonthDays(m_lunarSel.wYear, m_lunarSel.wMonth) + weekStart) % 7;
 
-	//计算选择的格子是第几行第几列
-	//---------------------------------------------------------------
-	int  row = ( m_lunarSel.wDay + weekStart - 1) / 7 + 1;
-	int  col = m_lunarSel.wWeekDay;
-
-	// 计算选择的日期的方框的坐标
-	int	selleft = m_rectGrid.left + col * m_iGridWidth + 1;
-	int	seltop  = m_rectGrid.top  + row * m_iGridHeight + 1;
-	int selwidth = m_iGridWidth - 3;
-	int selheight= m_iGridHeight - 3;
-	// 在选择的日期的格子绘制一个矩形背景
-	cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
-	cairo_rectangle (cr, selleft, seltop, selwidth, selheight);  //绘制长方形
-	cairo_stroke(cr);	//矩形框
-	
 	//如果选择的当月, 则绘制"今天"的背景
 	if( (m_lunarNow.wYear == m_lunarSel.wYear) && (m_lunarNow.wMonth == m_lunarSel.wMonth) )
 	{
 		//-------------------------------------------------
 		// 计算今天是在第几行第几列
 		//-------------------------------------------------
-		row = ( m_lunarNow.wDay + weekStart - 1) / 7 + 1;
-		col = m_lunarNow.wWeekDay;
+		int row = ( m_lunarNow.wDay + weekStart - 1) / 7 + 1;
+		int col = m_lunarNow.wWeekDay;
 
-		selleft = m_rectGrid.left + col * m_iGridWidth + 1;
-		seltop  = m_rectGrid.top  + row * m_iGridHeight - 1;
-		selwidth = m_iGridWidth - 2;
-		selheight= m_iGridHeight - 2;
+		int selleft = m_rectGrid.left + col * m_iGridWidth + 1;
+		int seltop  = m_rectGrid.top  + row * m_iGridHeight - 1;
+		int selwidth = m_iGridWidth-1;
+		int selheight= m_iGridHeight-1;
 
 		// 在选择的日期的格子绘制一个矩形背景
 		cairo_set_source_rgba(cr, 0.3, 0.3, 0.3, 0.5);
@@ -382,8 +367,9 @@ void JCalendar::Draw(cairo_t* cr)
 #endif
 	// 设置字体大小
 	cairo_set_font_size(cr, m_iLargeFontSize);
+	// 设置字体颜色
 	cairo_set_source_rgb(cr, m_rgbNormal.red()/255.0, m_rgbNormal.green()/255.0, m_rgbNormal.blue()/255.0);
-	
+	// 输出月标题
 	cairo_text_extents_t extents;
 	char buffer[40];
 	sprintf(buffer, "%d年%d月", m_lunarSel.wYear, m_lunarSel.wMonth);
@@ -409,107 +395,56 @@ void JCalendar::Draw(cairo_t* cr)
 		cairo_move_to(cr, tx, ty);
 		cairo_show_text(cr, g_szWeek[i]);
 	}
-	//绘制日历日期: 公历文本
-	int wDay = 1;
+	//-----------------------------------------
+	// 绘制日历日期
+	//-----------------------------------------
+	LUNARDATE  curDate = m_lunarSel;	//选择的日期
+	curDate.wDay = 1;					//从1日开始
+	cjxGetLunarDate(&curDate);			//获取农历
+	
+	char lunar_buffer[40];		//农历字符串缓冲区
 	m_rectGrid.top += m_iGridHeight;
-	//   先写第一行
+	//先写第一行
 	for(int i = weekStart; i < 7; i++)
 	{
-		sprintf(buffer, "%d", wDay);
-		cairo_text_extents(cr, buffer, &extents);
-		
-		tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
-		ty  = m_rectGrid.top + m_iGridHeight - m_iSmallFontSize - (m_iGridHeight - m_iLargeFontSize) /2;
+		bool isHoliday = false;		//是否节假日
 
-		if(i==0 || i==6)
-		{
-			cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
-		}
-		else
-		{
-			cairo_set_source_rgb(cr, m_rgbNormal.red()/255.0, m_rgbNormal.green()/255.0, m_rgbNormal.blue()/255.0);
-		}
-		cairo_move_to(cr, tx, ty);
-		cairo_show_text(cr, buffer);
-		wDay ++;
-	}
-	// 写中间的行
-	for(int j = 1; j < nlines; j++)
-	{
-		for(int i=0; i<7; i++)
-		{
-			sprintf(buffer, "%d", wDay);
-			cairo_text_extents(cr, buffer, &extents);
-		
-			tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
-			ty  = m_rectGrid.top + m_iGridHeight * (j+1) - m_iSmallFontSize - (m_iGridHeight - m_iLargeFontSize) /2;
+		//获取公历文本
+		memset(buffer, 0, sizeof(buffer));
+		sprintf(buffer, "%d", curDate.wDay);
 
-			if(i==0 || i==6)
-			{
-				cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
-			}
-			else
-			{
-				cairo_set_source_rgb(cr, m_rgbNormal.red()/255.0, m_rgbNormal.green()/255.0, m_rgbNormal.blue()/255.0);
-			}
-			cairo_move_to(cr, tx, ty);
-			cairo_show_text(cr, buffer);
-			wDay ++;
-		}
-	}
-	// 最后一行
-	for(int i=0; i< weekEnd; i++)
-	{
-		sprintf(buffer, "%d", wDay);
-		cairo_text_extents(cr, buffer, &extents);
-	
-		tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
-		ty  = m_rectGrid.top + m_iGridHeight * (nlines+1) - m_iSmallFontSize - (m_iGridHeight - m_iLargeFontSize) /2;
-
-		if(i==0 || i==6)
-		{
-			cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
-		}
-		else
-		{
-			cairo_set_source_rgb(cr, m_rgbNormal.red()/255.0, m_rgbNormal.green()/255.0, m_rgbNormal.blue()/255.0);
-		}
-		cairo_move_to(cr, tx, ty);
-		cairo_show_text(cr, buffer);
-		wDay ++;
-	}
-	// 绘制农历
-	//   先写第一行
-	LUNARDATE  curDate = m_lunarSel;
-	curDate.wDay = 1;
-	cjxGetLunarDate(&curDate);
-	cairo_set_font_size(cr, m_iSmallFontSize);
-	for(int i =  weekStart; i < 7; i++)
-	{	
+		//获取农历文本
+		memset(lunar_buffer, 0, sizeof(lunar_buffer));
 		const char *pszJieri = cjxGetLunarHolidayName(curDate.wLunarMonth, curDate.wLunarDay);
 		if(pszJieri != NULL) //农历传统节日
 		{
-			strcpy(buffer, pszJieri); 
+			strcpy(lunar_buffer, pszJieri); 
+			isHoliday = true;
+		}
+		else if((pszJieri = cjxGetSolarHolidayName(curDate.wMonth, curDate.wDay)) != NULL)
+		{
+			strcpy(lunar_buffer, pszJieri); 
+			isHoliday = true;
 		}
 		else if((pszJieri = cjxGetTermName(curDate.wYear, curDate.wMonth, curDate.wDay)) != NULL)
 		{	//24节气
-			strcpy(buffer, pszJieri); 
+			strcpy(lunar_buffer, pszJieri); 
 		}
 		else if(curDate.wLunarDay == 1) //农历初一
 		{
-			strcpy(buffer, curDate.szLunarMonth); 
-			strcat(buffer, _T("月"));
+			strcpy(lunar_buffer, curDate.szLunarMonth); 
+			strcat(lunar_buffer, _T("月"));
 		}
 		else	//普通日期
 		{
-			strcpy(buffer, curDate.szLunarDay);
+			strcpy(lunar_buffer, curDate.szLunarDay);
 		}
-
+		//绘制公历
+		cairo_set_font_size(cr, m_iLargeFontSize);
 		cairo_text_extents(cr, buffer, &extents);
 		tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
-		ty  = m_rectGrid.top  + m_iGridHeight - 8;
-		
-		if(i==0 || i==6)
+		ty  = m_rectGrid.top + m_iGridHeight - m_iSmallFontSize - (m_iGridHeight - m_iLargeFontSize) /2;
+		if(i==0 || i==6 || isHoliday==true)
 		{
 			cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
 		}
@@ -519,6 +454,22 @@ void JCalendar::Draw(cairo_t* cr)
 		}
 		cairo_move_to(cr, tx, ty);
 		cairo_show_text(cr, buffer);
+		//农历文本
+		cairo_set_font_size(cr, m_iSmallFontSize);
+		cairo_text_extents(cr, lunar_buffer, &extents);
+		tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
+		ty  = m_rectGrid.top  + m_iGridHeight - 8;
+		if(i==0 || i==6 || isHoliday==true)
+		{
+			cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
+		}
+		else
+		{
+			cairo_set_source_rgb(cr, m_rgbNormal.red()/255.0, m_rgbNormal.green()/255.0, m_rgbNormal.blue()/255.0);
+		}
+		cairo_move_to(cr, tx, ty);
+		cairo_show_text(cr, lunar_buffer);
+		//下一天
 		cjxLunarNextDay(&curDate);
 	}
 	// 写中间的行
@@ -526,30 +477,44 @@ void JCalendar::Draw(cairo_t* cr)
 	{
 		for(int i=0; i<7; i++)
 		{
+			bool isHoliday = false;		//是否节假日
+
+			//获取公历文本
+			memset(buffer, 0, sizeof(buffer));
+			sprintf(buffer, "%d", curDate.wDay);
+
+			//获取农历文本
+			memset(lunar_buffer, 0, sizeof(lunar_buffer));
 			const char *pszJieri = cjxGetLunarHolidayName(curDate.wLunarMonth, curDate.wLunarDay);
 			if(pszJieri != NULL) //农历传统节日
 			{
-				strcpy(buffer, pszJieri); 
+				strcpy(lunar_buffer, pszJieri); 
+				isHoliday = true;
+			}
+			else if((pszJieri = cjxGetSolarHolidayName(curDate.wMonth, curDate.wDay)) != NULL)
+			{
+				strcpy(lunar_buffer, pszJieri); 
+				isHoliday = true;
 			}
 			else if((pszJieri = cjxGetTermName(curDate.wYear, curDate.wMonth, curDate.wDay)) != NULL)
 			{	//24节气
-				strcpy(buffer, pszJieri); 
+				strcpy(lunar_buffer, pszJieri); 
 			}
 			else if(curDate.wLunarDay == 1) //农历初一
 			{
-				strcpy(buffer, curDate.szLunarMonth); 
-				strcat(buffer, _T("月"));
+				strcpy(lunar_buffer, curDate.szLunarMonth); 
+				strcat(lunar_buffer, _T("月"));
 			}
 			else	//普通日期
 			{
-				strcpy(buffer, curDate.szLunarDay);
+				strcpy(lunar_buffer, curDate.szLunarDay);
 			}
-
+			//绘制公历
+			cairo_set_font_size(cr, m_iLargeFontSize);
 			cairo_text_extents(cr, buffer, &extents);
 			tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
-			ty  = m_rectGrid.top  + m_iGridHeight * (j+1) - 8;
-		
-			if(i==0 || i==6)
+			ty  = m_rectGrid.top + m_iGridHeight * (j+1) - m_iSmallFontSize - (m_iGridHeight - m_iLargeFontSize) /2;
+			if(i==0 || i==6 || isHoliday==true)
 			{
 				cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
 			}
@@ -559,36 +524,66 @@ void JCalendar::Draw(cairo_t* cr)
 			}
 			cairo_move_to(cr, tx, ty);
 			cairo_show_text(cr, buffer);
+			//农历文本
+			cairo_set_font_size(cr, m_iSmallFontSize);
+			cairo_text_extents(cr, lunar_buffer, &extents);
+			tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
+			ty  = m_rectGrid.top  + m_iGridHeight * (j+1) - 8;
+			if(i==0 || i==6 || isHoliday==true)
+			{
+				cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
+			}
+			else
+			{
+				cairo_set_source_rgb(cr, m_rgbNormal.red()/255.0, m_rgbNormal.green()/255.0, m_rgbNormal.blue()/255.0);
+			}
+			cairo_move_to(cr, tx, ty);
+			cairo_show_text(cr, lunar_buffer);
+			//下一天
 			cjxLunarNextDay(&curDate);
 		}
 	}
 	// 最后一行
 	for(int i=0; i< weekEnd; i++)
 	{
+		bool isHoliday = false;		//是否节假日
+
+		//获取公历文本
+		memset(buffer, 0, sizeof(buffer));
+		sprintf(buffer, "%d", curDate.wDay);
+
+		//获取农历文本
+		memset(lunar_buffer, 0, sizeof(lunar_buffer));
 		const char *pszJieri = cjxGetLunarHolidayName(curDate.wLunarMonth, curDate.wLunarDay);
 		if(pszJieri != NULL) //农历传统节日
 		{
-			strcpy(buffer, pszJieri); 
+			strcpy(lunar_buffer, pszJieri); 
+			isHoliday = true;
+		}
+		else if((pszJieri = cjxGetSolarHolidayName(curDate.wMonth, curDate.wDay)) != NULL)
+		{
+			strcpy(lunar_buffer, pszJieri); 
+			isHoliday = true;
 		}
 		else if((pszJieri = cjxGetTermName(curDate.wYear, curDate.wMonth, curDate.wDay)) != NULL)
 		{	//24节气
-			strcpy(buffer, pszJieri); 
+			strcpy(lunar_buffer, pszJieri); 
 		}
 		else if(curDate.wLunarDay == 1) //农历初一
 		{
-			strcpy(buffer, curDate.szLunarMonth); 
-			strcat(buffer, _T("月"));
+			strcpy(lunar_buffer, curDate.szLunarMonth); 
+			strcat(lunar_buffer, _T("月"));
 		}
 		else	//普通日期
 		{
-			strcpy(buffer, curDate.szLunarDay);
+			strcpy(lunar_buffer, curDate.szLunarDay);
 		}
-
+		//绘制公历
+		cairo_set_font_size(cr, m_iLargeFontSize);
 		cairo_text_extents(cr, buffer, &extents);
 		tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
-		ty  = m_rectGrid.top  + m_iGridHeight * (nlines+1) - 8;
-		
-		if(i==0 || i==6)
+		ty  = m_rectGrid.top + m_iGridHeight * (nlines+1) - m_iSmallFontSize - (m_iGridHeight - m_iLargeFontSize) /2;
+		if(i==0 || i==6 || isHoliday==true)
 		{
 			cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
 		}
@@ -598,8 +593,23 @@ void JCalendar::Draw(cairo_t* cr)
 		}
 		cairo_move_to(cr, tx, ty);
 		cairo_show_text(cr, buffer);
+		//农历文本
+		cairo_set_font_size(cr, m_iSmallFontSize);
+		cairo_text_extents(cr, lunar_buffer, &extents);
+		tx  = m_rectGrid.left + m_iGridWidth * i + (m_iGridWidth - extents.width)/2;
+		ty  = m_rectGrid.top  + m_iGridHeight * (nlines+1) - 8;
+		if(i==0 || i==6 || isHoliday==true)
+		{
+			cairo_set_source_rgb(cr, m_rgbHoliday.red()/255.0, m_rgbHoliday.green()/255.0, m_rgbHoliday.blue()/255.0);
+		}
+		else
+		{
+			cairo_set_source_rgb(cr, m_rgbNormal.red()/255.0, m_rgbNormal.green()/255.0, m_rgbNormal.blue()/255.0);
+		}
+		cairo_move_to(cr, tx, ty);
+		cairo_show_text(cr, lunar_buffer);
+		//下一天
 		cjxLunarNextDay(&curDate);
 	}
 	m_rectGrid.top -= m_iGridHeight;
 }
-

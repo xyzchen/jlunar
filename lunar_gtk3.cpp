@@ -100,8 +100,8 @@ static gint button_press_event(GtkWidget* widget, GdkEventButton* event, gpointe
 	if((event->button == 1)&& (event->y <40))	//判断是否左键按下
 	{
 		g_drag = TRUE;		// 进入拖动状态
-		g_x    = event->x;	//取得鼠标相对于窗口的位置
-		g_y    = event->y;
+		g_x    = int(event->x);	//取得鼠标相对于窗口的位置
+		g_y    = int(event->y);
 	}
 	else if(event->button == 3)	//右键
 	{ 
