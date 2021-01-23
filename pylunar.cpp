@@ -42,6 +42,7 @@ static PyObject* lunar_to_dict(const LUNARDATE& lunardate)
 	PyDict_SetItemString(pDict, "ShengXiao", Py_BuildValue("s", lunardate.szYearShengXiao));
 	PyDict_SetItemString(pDict, "LunarMonthName", Py_BuildValue("s", lunardate.szLunarMonth));
 	PyDict_SetItemString(pDict, "LunarDayName", Py_BuildValue("s", lunardate.szLunarDay));
+	PyDict_SetItemString(pDict, "WeekName", Py_BuildValue("s", cjxGetWeekName(lunardate.wWeekDay)));
 	// 返回字典对象给调用者
 	return pDict;	
 }
