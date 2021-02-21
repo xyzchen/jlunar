@@ -170,6 +170,27 @@ static PyObject* wrap_GetSolarMonthDays(PyObject* self, PyObject* args)
 }
 
 //------------------------------------------------------
+//  计算 公历 year-month-day 是星期几
+//     参数: 公历的年月日 1900-1-1 ~ 2100-12-31 之间
+//     返回:
+//          星期几(0-6)，日为星期天
+//-----------------------------------------------------
+static PyObject* wrap_GetWeekday(PyObject* self, PyObject* args)
+{
+	int y, m, d;
+	//解析参数
+	if (! PyArg_ParseTuple(args, "iii", &y, &m , &d))
+	{
+		PyErr_SetString(PyExc_TypeError, "无效的参数");
+		return NULL;
+	}
+	//计算天数
+	int weekday = cjxGetWeekday(y, m, d);
+	//构造整数返回值
+	return Py_BuildValue("i", weekday);
+}
+
+//------------------------------------------------------
 //  计算 公历 year-month-day 到 1900-1-0的天数 
 //     参数: 公历的年月日 1900-1-1 ~ 2100-12-31 之间
 //     返回:
@@ -221,6 +242,7 @@ static PyMethodDef lunarMethods[] =
 	{"get_today", wrap_GetToday, METH_VARARGS, "get_today(): 获取当天的农历日期"},
 	{"get_todaystring", wrap_GetTodayString, METH_VARARGS, "get_todaystring(): 获取当天的日期字符串"},
 	{"get_date", wrap_GetDate, METH_VARARGS, "get_date(time()): 从指定的UNIX时间戳获取日期对象"},
+	{"get_weekday", wrap_GetWeekday, METH_VARARGS, "get_weekday(y, m, d): 获取公历y年m月d日是星期几(0-6)"},
 	{"get_lunardate", wrap_GetLunarDate, METH_VARARGS, "get_lunardate(y, m, d): 从公历日期获取农历日期"},
 	{"get_solardate", wrap_GetSolarDate, METH_VARARGS, "get_solardate(y, m, d, isleap): 从农历日期获取公历日期"},
 	{"get_solar_monthdays", wrap_GetSolarMonthDays, METH_VARARGS, "get_solar_monthdays(y, m): 获取公历y年m月的天数"},
