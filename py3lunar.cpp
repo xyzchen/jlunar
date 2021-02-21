@@ -33,19 +33,58 @@ static PyObject* lunar_to_dict(const LUNARDATE& lunardate)
 	PyObject* pDict = PyDict_New(); // 创建一个字典对象
 	assert(PyDict_Check(pDict));
 	// 添加 名/值 对到字典中
-	PyDict_SetItemString(pDict, "Year", Py_BuildValue("i", lunardate.wYear));
-	PyDict_SetItemString(pDict, "Month", Py_BuildValue("i", lunardate.wMonth));
-	PyDict_SetItemString(pDict, "Day", Py_BuildValue("i", lunardate.wDay));
-	PyDict_SetItemString(pDict, "WeekDay", Py_BuildValue("i", lunardate.wWeekDay));
-	PyDict_SetItemString(pDict, "LunarYear", Py_BuildValue("i", lunardate.wLunarYear));
-	PyDict_SetItemString(pDict, "LunarMonth", Py_BuildValue("i", lunardate.wLunarMonth));
-	PyDict_SetItemString(pDict, "LunarDay", Py_BuildValue("i", lunardate.wLunarDay));
-	PyDict_SetItemString(pDict, "IsLeapMonth", Py_BuildValue("i", lunardate.wIsLeapMonth));
-	PyDict_SetItemString(pDict, "LunarYearName", Py_BuildValue("s", lunardate.szYearGanZhi));
-	PyDict_SetItemString(pDict, "ShengXiao", Py_BuildValue("s", lunardate.szYearShengXiao));
-	PyDict_SetItemString(pDict, "LunarMonthName", Py_BuildValue("s", lunardate.szLunarMonth));
-	PyDict_SetItemString(pDict, "LunarDayName", Py_BuildValue("s", lunardate.szLunarDay));
-	PyDict_SetItemString(pDict, "WeekName", Py_BuildValue("s", cjxGetWeekName(lunardate.wWeekDay)));
+	PyDict_SetItemString(pDict, "year", Py_BuildValue("i", lunardate.wYear));
+	PyDict_SetItemString(pDict, "month", Py_BuildValue("i", lunardate.wMonth));
+	PyDict_SetItemString(pDict, "day", Py_BuildValue("i", lunardate.wDay));
+	PyDict_SetItemString(pDict, "weekday", Py_BuildValue("i", lunardate.wWeekDay));
+	PyDict_SetItemString(pDict, "lunar_year", Py_BuildValue("i", lunardate.wLunarYear));
+	PyDict_SetItemString(pDict, "lunar_month", Py_BuildValue("i", lunardate.wLunarMonth));
+	PyDict_SetItemString(pDict, "lunar_day", Py_BuildValue("i", lunardate.wLunarDay));
+	PyDict_SetItemString(pDict, "is_leapmonth", Py_BuildValue("i", lunardate.wIsLeapMonth));
+	PyDict_SetItemString(pDict, "ganzhi", Py_BuildValue("s", lunardate.szYearGanZhi));
+	PyDict_SetItemString(pDict, "shengxiao", Py_BuildValue("s", lunardate.szYearShengXiao));
+	PyDict_SetItemString(pDict, "month_name", Py_BuildValue("s", lunardate.szLunarMonth));
+	PyDict_SetItemString(pDict, "day_name", Py_BuildValue("s", lunardate.szLunarDay));
+	PyDict_SetItemString(pDict, "week_name", Py_BuildValue("s", cjxGetWeekName(lunardate.wWeekDay)));
+	//——————————————————————————————————————————————————————
+	//填充节气和节日：是指公农历节日和二十四节气
+	//——————————————————————————————————————————————————————
+	char jieri_buffer[200];
+	memset(jieri_buffer, 0, sizeof(jieri_buffer));
+	//获取农历二十四节气信息
+	const char* jieqistr = cjxGetTermName(lunardate.wYear, lunardate.wMonth, lunardate.wDay);
+	if(jieqistr)
+	{
+		strcpy(jieri_buffer, jieqistr);
+		PyDict_SetItemString(pDict, "jieqi", Py_BuildValue("s", jieri_buffer));
+	}
+	//获取节日信息
+	memset(jieri_buffer, 0, sizeof(jieri_buffer));
+	//先获取农历节日, 设置农历节日为清明节
+	if((jieqistr != NULL) && (strcmp(jieqistr, "清明")==0))
+	{
+		strcpy(jieri_buffer, jieqistr);
+	}
+	else
+	{
+		const char* lunar_jieri = cjxGetLunarHolidayName(lunardate.wLunarMonth, lunardate.wLunarDay);
+		if(lunar_jieri)
+		{
+			strcpy(jieri_buffer, lunar_jieri);
+		}
+	}
+	//获取公历节日
+	const char* solar_jieri = cjxGetSolarHolidayName(lunardate.wMonth, lunardate.wDay);
+	if(solar_jieri)
+	{
+		strcat(jieri_buffer, "|");
+		strcat(jieri_buffer, solar_jieri);
+	}
+	//设置节日字符串
+	if(strlen(jieri_buffer) > 0)
+	{
+		PyDict_SetItemString(pDict, "jieri", Py_BuildValue("s", jieri_buffer));
+	}
 	// 返回字典对象给调用者
 	return pDict;
 }
