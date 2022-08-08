@@ -40,9 +40,14 @@ $(outdir)/jcalendar.o: jcalendar.cpp jlunar.h
 $(outdir)/lunar_gtk3.o: lunar_gtk3.cpp jlunar.h
 	$(cc) $(cflags) -c -o $(outdir)/lunar_gtk3.o lunar_gtk3.cpp
 
-install:                     #安装
+install:$(proj)              #安装
 	cp $(outdir)/$(proj) /usr/local/bin/$(proj)
+
+osxinstall:$(proj)           #osx安装
+	cp -r lunar.app $(outdir)/
+	cp $(outdir)/$(proj) $(outdir)/lunar.app/Contents/MacOS/lunar
+	cp -r $(outdir)/lunar.app /Applications/
 
 clean:                      #clean为目标
 	rm -f $(objs) $(outdir)/$(proj)
-
+	rm -rf $(outdir)/*
