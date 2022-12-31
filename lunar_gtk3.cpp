@@ -37,6 +37,7 @@ JCalendar* g_calendar = NULL; 	//日历对象
 //---------------------------------------------------------------------
 int g_posX = 0;		//窗口位置X
 int g_posY = 0;		//窗口位置Y
+double g_opacity = 0.0;	//主窗口背景区域透明度(0.0为完全透明，1.0为不透明)
 //---------------------------------------------------------------------
 
 //读取配置文件
@@ -57,10 +58,15 @@ static void load_config()
 	if(!g_key_file_load_from_file(keyfile, config, flags, &error))
 	{
 		fprintf(stderr, "%s\n", error->message);
+		g_error_free(error);
 		return;
 	}
+	//读取保存的位置信息
 	g_posX = g_key_file_get_integer(keyfile, "position", "x", NULL);
 	g_posY = g_key_file_get_integer(keyfile, "position", "y", NULL);
+	//读取透明度信息
+	g_opacity = g_key_file_get_double(keyfile, "position", "opacity", NULL);
+	//释放文件
 	g_key_file_free(keyfile);
 }
 
@@ -77,6 +83,7 @@ static void save_config()
 	GKeyFile* keyfile = g_key_file_new ();
 	g_key_file_set_integer(keyfile, "position", "x", g_posX);
 	g_key_file_set_integer(keyfile, "position", "y", g_posY);
+	g_key_file_set_double(keyfile, "position", "opacity", g_opacity);
 	g_key_file_save_to_file(keyfile, config, &error);
 	g_key_file_free(keyfile);
 }
@@ -154,7 +161,7 @@ static gint draw_event(GtkWidget* widget,  cairo_t *cr, gpointer data)
 	int area_h = allocation.height;
 	
 	//cairo绘图
-	cairo_set_source_rgba(cr, 0, 0, 0, 0.1);	//设置透明度为接近完全透明
+	cairo_set_source_rgba(cr, 0, 0, 0, g_opacity);	//设置窗口背景的透明度
 	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);	// 重要
 	cairo_paint(cr);
 	//cairo_save (cr);
@@ -295,7 +302,7 @@ static void on_app_activate(GApplication *app, gpointer data)
 	//设置窗口大小、位置、背景
 	gtk_widget_set_size_request(g_mainwin, MAIN_W, MAIN_H);	//设置大小
 	gtk_window_move(GTK_WINDOW(g_mainwin), g_posX, g_posY);	//移动窗体
-	gtk_window_set_opacity(GTK_WINDOW(g_mainwin), 1.0);	//设置透明度
+	gtk_widget_set_opacity(g_mainwin, 1.0);	//设置透明度，不透明，这个函数设置的是整个窗口的透明度
 	//创建弹出菜单
 	g_popmenu = create_popmenu();
 	gtk_widget_show_all(GTK_WIDGET(g_popmenu)); // 一定要显示菜单项
@@ -324,7 +331,7 @@ static void on_app_activate(GApplication *app, gpointer data)
 
 	//设置透明颜色处理
 	GdkScreen* screen = gtk_widget_get_screen(g_mainwin);	// 重要
-	GdkVisual* visual = gdk_screen_get_rgba_visual (screen);
+	GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
 	if(visual == NULL)
 	{
 		visual = gdk_screen_get_system_visual(screen);
@@ -353,5 +360,4 @@ int main(int argc, char** argv)
 	g_object_unref(app);
 	//返回结果
 	return status;
-
 }

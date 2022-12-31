@@ -38,6 +38,7 @@ JCalendar* g_calendar = NULL; 	//日历对象
 //---------------------------------------------------------------------
 int g_posX = 0;		//窗口位置X
 int g_posY = 0;		//窗口位置Y
+double g_opacity = 0.0;	//主窗口背景的透明度
 //读取配置文件
 static void load_config()
 {
@@ -55,10 +56,13 @@ static void load_config()
 	if(!g_key_file_load_from_file(keyfile, config, flags, &error))
 	{
 		fprintf(stderr, "%s\n", error->message);
+		g_error_free(error);
 		return;
 	}
+	//读取保存的位置信息
 	g_posX = g_key_file_get_integer(keyfile, "position", "x", NULL);
 	g_posY = g_key_file_get_integer(keyfile, "position", "y", NULL);
+	g_opacity = g_key_file_get_double(keyfile, "position", "opacity", NULL);
 	g_key_file_free(keyfile);
 }
 
@@ -75,6 +79,7 @@ static void save_config()
 	GKeyFile* keyfile = g_key_file_new ();
 	g_key_file_set_integer(keyfile, "position", "x", g_posX);
 	g_key_file_set_integer(keyfile, "position", "y", g_posY);
+	g_key_file_set_double(keyfile, "position", "opacity", g_opacity);
 	g_key_file_save_to_file(keyfile, config, &error);
 	g_key_file_free(keyfile);
 }
@@ -148,7 +153,7 @@ static gint expose_event(GtkWidget* widget, GdkEventExpose* event)
 	
 	//cairo绘图
 	cairo_t* cr = gdk_cairo_create(widget->window);
-	cairo_set_source_rgba(cr, 0, 0, 0, 0.1);	//设置透明度为接近完全透明
+	cairo_set_source_rgba(cr, 0, 0, 0, g_opacity);	//设置窗口背景部分的透明度
 	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);	// 重要
 	cairo_paint(cr);
 	//cairo_save (cr);
@@ -293,7 +298,7 @@ int main(int argc, char** argv)
 	//设置窗口大小、位置、背景
 	gtk_widget_set_size_request(g_mainwin, MAIN_W, MAIN_H);	//设置大小
 	gtk_window_move(GTK_WINDOW(g_mainwin), g_posX, g_posY);	//移动窗体
-	//gtk_window_set_opacity(GTK_WINDOW(g_mainwin), 0.5);	//设置透明度
+	//gtk_window_set_opacity(GTK_WINDOW(g_mainwin), 1.0);	//设置透明度(窗口整体透明度)
 	
 	//创建弹出菜单
 	g_popmenu = create_popmenu();
